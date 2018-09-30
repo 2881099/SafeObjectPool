@@ -1,2 +1,6 @@
-# WorkPool
-工作池，应用场景：连接池，资源池等等
+轻便线程队列处理器
+
+# 使用方法
+
+> Install-Package SafeObjectPool
+

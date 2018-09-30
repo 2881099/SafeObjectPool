@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>SafeObjectPool</AssemblyName>
+    <PackageId>SafeObjectPool</PackageId>
+    <RootNamespace>SafeObjectPool</RootNamespace>
+    <Version>0.0.1</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/2881099/SafeObjectPool</PackageProjectUrl>
+    <Description>应用场景：连接池，资源池等等</Description>
+    <RepositoryUrl>https://github.com/2881099/SafeObjectPool</RepositoryUrl>
+    <PackageTags>Pool Pooling PoolSize ObjectPool 连接池</PackageTags>
+    <WarningLevel>3</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\SafeObjectPool.xml</DocumentationFile>
+  </PropertyGroup>
+</Project>
