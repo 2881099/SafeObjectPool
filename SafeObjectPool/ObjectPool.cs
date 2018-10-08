@@ -16,7 +16,7 @@ namespace SafeObjectPool {
 	/// <typeparam name="T">对象类型</typeparam>
 	public partial class ObjectPool<T> {
 
-		private IPolicy<T> _policy;
+		internal IPolicy<T> _policy;
 
 		private List<Object<T>> _allObjects = new List<Object<T>>();
 		private object _allObjectsLock = new object();
@@ -27,11 +27,25 @@ namespace SafeObjectPool {
 
 		private bool _isAvailable = true;
 		/// <summary>
-		/// 是否可用（扩展）
+		/// 是否可用
 		/// </summary>
-		public bool IsAvailable { get => _isAvailable; set { _isAvailable = value; UnavailableTime = value ? null : new DateTime?(DateTime.Now); } }
+		public bool IsAvailable {
+			get => _isAvailable;
+			set {
+				_isAvailable = value;
+				UnavailableTime = value ? null : new DateTime?(DateTime.Now);
+
+				// 不可用的时候，将池中所有对象状态设为不可用
+				if (value == false) {
+					var lastActive = new DateTime(2000, 1, 1);
+					lock (_allObjectsLock) {
+						foreach (var obj in _allObjects) obj.IsAvailable = value;
+					}
+				}
+			}
+		}
 		/// <summary>
-		/// 不可用时间（扩展）
+		/// 不可用时间
 		/// </summary>
 		public DateTime? UnavailableTime { get; private set; }
 
