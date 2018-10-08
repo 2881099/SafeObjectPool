@@ -45,7 +45,7 @@ namespace SafeObjectPool {
 		/// <summary>
 		/// 是否可用
 		/// </summary>
-		public bool IsAvailable { get; internal set; }
+		public bool IsAvailable => Pool.IsAvailable;
 
 		public override string ToString() {
 			return $"{this.Value}, Times: {this.GetTimes}, ThreadId(R/G): {this.LastReturnThreadId}/{this.LastGetThreadId}, Time(R/G): {this.LastReturnTime.ToString("yyyy-MM-dd HH:mm:ss:ms")}/{this.LastGetTime.ToString("yyyy-MM-dd HH:mm:ss:ms")}";
@@ -56,7 +56,7 @@ namespace SafeObjectPool {
 		/// </summary>
 		public void ResetValue() {
 			(this.Value as IDisposable)?.Dispose();
-			this.Value = this.Pool._policy.Create();
+			this.Value = this.Pool.Policy.Create();
 		}
 
 		public void Dispose() {

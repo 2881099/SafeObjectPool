@@ -16,7 +16,7 @@ namespace SafeObjectPool {
 	/// <typeparam name="T">对象类型</typeparam>
 	public partial class ObjectPool<T> {
 
-		internal IPolicy<T> _policy;
+		public IPolicy<T> Policy { get; protected set; }
 
 		private List<Object<T>> _allObjects = new List<Object<T>>();
 		private object _allObjectsLock = new object();
@@ -34,14 +34,6 @@ namespace SafeObjectPool {
 			set {
 				_isAvailable = value;
 				UnavailableTime = value ? null : new DateTime?(DateTime.Now);
-
-				// 不可用的时候，将池中所有对象状态设为不可用
-				if (value == false) {
-					var lastActive = new DateTime(2000, 1, 1);
-					lock (_allObjectsLock) {
-						foreach (var obj in _allObjects) obj.IsAvailable = value;
-					}
-				}
 			}
 		}
 		/// <summary>
@@ -84,7 +76,7 @@ namespace SafeObjectPool {
 		/// </summary>
 		/// <param name="policy">策略</param>
 		public ObjectPool(IPolicy<T> policy) {
-			_policy = policy;
+			Policy = policy;
 		}
 
 		/// <summary>
@@ -93,14 +85,14 @@ namespace SafeObjectPool {
 		/// <returns></returns>
 		private Object<T> getFree() {
 
-			if ((_freeObjects.TryDequeue(out var obj) == false || obj == null) && _allObjects.Count < _policy.PoolSize) {
+			if ((_freeObjects.TryDequeue(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize) {
 
 				lock (_allObjectsLock)
-					if (_allObjects.Count < _policy.PoolSize)
+					if (_allObjects.Count < Policy.PoolSize)
 						_allObjects.Add(obj = new Object<T> { Pool = this });
 
 				if (obj != null)
-					obj.Value = _policy.Create();
+					obj.Value = Policy.Create();
 			}
 
 			return obj;
@@ -116,7 +108,7 @@ namespace SafeObjectPool {
 			var obj = getFree();
 			if (obj == null) {
 
-				if (timeout == null) timeout = _policy.SyncGetTimeout;
+				if (timeout == null) timeout = Policy.SyncGetTimeout;
 
 				var queueItem = new GetSyncQueueInfo();
 
@@ -131,9 +123,9 @@ namespace SafeObjectPool {
 
 				if (obj == null) {
 
-					_policy.GetTimeout();
+					Policy.GetTimeout();
 
-					if (_policy.IsThrowGetTimeoutException)
+					if (Policy.IsThrowGetTimeoutException)
 						throw new Exception($"SafeObjectPool 获取超时（{timeout.Value.TotalSeconds}秒），设置 Policy.IsThrowGetTimeoutException 可以避免该异常。");
 
 					return null;
@@ -144,7 +136,7 @@ namespace SafeObjectPool {
 			obj.LastGetTime = DateTime.Now;
 			Interlocked.Increment(ref obj._getTimes);
 
-			_policy.Get(obj, false);
+			Policy.Get(obj, false);
 
 			return obj;
 		}
@@ -169,7 +161,7 @@ namespace SafeObjectPool {
 			obj.LastGetTime = DateTime.Now;
 			Interlocked.Increment(ref obj._getTimes);
 
-			_policy.Get(obj, true);
+			Policy.Get(obj, true);
 
 			return obj;
 		}
@@ -187,7 +179,7 @@ namespace SafeObjectPool {
 
 				(obj.Value as IDisposable)?.Dispose();
 
-				obj.Value = _policy.Create();
+				obj.Value = Policy.Create();
 			}
 
 			obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
@@ -195,13 +187,13 @@ namespace SafeObjectPool {
 
 			bool isReturn = false;
 
-			if (_policy.ReturnPriority == ReturnPriority.Async) {
+			if (Policy.ReturnPriority == ReturnPriority.Async) {
 
 				isReturn = returnAsync(obj, isReturn);
 				isReturn = returnSync(obj, isReturn);
 			}
 
-			if (_policy.ReturnPriority == ReturnPriority.Sync) {
+			if (Policy.ReturnPriority == ReturnPriority.Sync) {
 
 				isReturn = returnSync(obj, isReturn);
 				isReturn = returnAsync(obj, isReturn);
@@ -212,7 +204,7 @@ namespace SafeObjectPool {
 
 				try {
 
-					_policy.Return(obj);
+					Policy.Return(obj);
 
 				} catch {
 

@@ -19,8 +19,8 @@ namespace SafeObjectPool {
 		}
 
 		public void Get(Object<T> obj, bool isAsync) {
-			if (isAsync) Console.WriteLine("GetAsync: " + obj);
-			else Console.WriteLine("Get: " + obj);
+			//if (isAsync) Console.WriteLine("GetAsync: " + obj);
+			//else Console.WriteLine("Get: " + obj);
 
 			OnGetObject?.Invoke(obj);
 		}
@@ -30,7 +30,7 @@ namespace SafeObjectPool {
 		}
 
 		public void Return(Object<T> obj) {
-			Console.WriteLine("Return: " + obj);
+			//Console.WriteLine("Return: " + obj);
 		}
 	}
 }
