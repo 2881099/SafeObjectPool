@@ -59,18 +59,14 @@ ab -c 10 -n 1000 -s 6000 测试结果差不多
 ## 使用方法
 
 ```csharp
-
 var pool = new SafeObjectPool.ObjectPool<MemoryStream>(10, () => new MemoryStream(), obj => {
-
 	if (DateTime.Now.Subtract(obj.LastGetTime).TotalSeconds > 5) {
-
 		// 对象超过5秒未活动，进行操作
 	}
 });
 
 var obj = pool.Get(); //借
 pool.Return(obj); //归还
-
 
 //或者 using 自动归还
 using (var obj = pool.Get()) {
