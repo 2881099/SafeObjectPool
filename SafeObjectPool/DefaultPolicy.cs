@@ -1,36 +1,56 @@
-﻿using SafeObjectPool.Policy;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SafeObjectPool {
 
 	public class DefaultPolicy<T> : IPolicy<T> {
+
+		public string Name { get; set; } = typeof(DefaultPolicy<T>).GetType().FullName;
 		public int PoolSize { get; set; } = 1000;
 		public TimeSpan SyncGetTimeout { get; set; } = TimeSpan.FromSeconds(10);
+		public int AsyncGetCapacity { get; set; } = 10000;
 		public bool IsThrowGetTimeoutException { get; set; } = true;
-		public ReturnPriority ReturnPriority { get; set; } = ReturnPriority.Sync;
+		public int CheckAvailableInterval { get; set; } = 5;
+
 
 		public Func<T> CreateObject;
 		public Action<Object<T>> OnGetObject;
 
-		public T Create() {
+		public T OnCreate() {
 			return CreateObject();
 		}
 
-		public void Get(Object<T> obj, bool isAsync) {
-			//if (isAsync) Console.WriteLine("GetAsync: " + obj);
-			//else Console.WriteLine("Get: " + obj);
-
+		public void OnGet(Object<T> obj) {
+			//Console.WriteLine("Get: " + obj);
 			OnGetObject?.Invoke(obj);
 		}
 
-		public void GetTimeout() {
+		public Task OnGetAsync(Object<T> obj) {
+			//Console.WriteLine("GetAsync: " + obj);
+			OnGetObject?.Invoke(obj);
+			return Task.CompletedTask;
+		}
+
+		public void OnGetTimeout() {
 			
 		}
 
-		public void Return(Object<T> obj) {
+		public void OnReturn(Object<T> obj) {
 			//Console.WriteLine("Return: " + obj);
+		}
+
+		public bool OnCheckAvailable(T obj) {
+			return true;
+		}
+
+		public void OnAvailable() {
+			
+		}
+
+		public void OnUnavailable() {
+			
 		}
 	}
 }

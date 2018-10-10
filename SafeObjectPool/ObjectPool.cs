@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using SafeObjectPool.Policy;
 
 namespace SafeObjectPool {
 
@@ -24,22 +23,112 @@ namespace SafeObjectPool {
 
 		private ConcurrentQueue<GetSyncQueueInfo> _getSyncQueue = new ConcurrentQueue<GetSyncQueueInfo>();
 		private ConcurrentQueue<TaskCompletionSource<Object<T>>> _getAsyncQueue = new ConcurrentQueue<TaskCompletionSource<Object<T>>>();
+		private ConcurrentQueue<bool> _getQueue = new ConcurrentQueue<bool>();
 
-		private bool _isAvailable = true;
 		/// <summary>
 		/// 是否可用
 		/// </summary>
-		public bool IsAvailable {
-			get => _isAvailable;
-			set {
-				_isAvailable = value;
-				UnavailableTime = value ? null : new DateTime?(DateTime.Now);
-			}
-		}
+		public bool IsAvailable { get; private set; } = true;
 		/// <summary>
 		/// 不可用时间
 		/// </summary>
 		public DateTime? UnavailableTime { get; private set; }
+		private object IsAvailableLock = new object();
+		private static bool running = true;
+
+		/// <summary>
+		/// 将连接池设置为不可用，后续 Get/GetAsync 均会报错，同时启动后台定时检查服务恢复可用
+		/// </summary>
+		/// <returns>由【可用】变成【不可用】时返回true，否则返回false</returns>
+		public bool SetUnavailable() {
+
+			bool isseted = false;
+
+			if (IsAvailable == true) {
+
+				lock(IsAvailableLock) {
+
+					if (IsAvailable == true) {
+
+						IsAvailable = false;
+						UnavailableTime = DateTime.Now;
+						isseted = true;
+					}
+				}
+			}
+
+			if (isseted) {
+
+				Policy.OnUnavailable();
+				CheckAvailable(Policy.CheckAvailableInterval);
+			}
+
+			return isseted;
+		}
+
+		/// <summary>
+		/// 后台定时检查可用性
+		/// </summary>
+		/// <param name="interval"></param>
+		private void CheckAvailable(int interval) {
+
+			new Thread(() => {
+
+				if (IsAvailable == false) Console.WriteLine($"【{Policy.Name}】恢复检查时间：{DateTime.Now.AddSeconds(interval)}");
+
+				while (IsAvailable == false) {
+
+					if (running == false) return;
+
+					Thread.CurrentThread.Join(TimeSpan.FromSeconds(interval));
+
+					if (running == false) return;
+
+					try {
+
+						var conn = getFree(false);
+						if (conn == null) throw new Exception($"CheckAvailable 无法获得资源，{this.Statistics}");
+
+						try {
+
+							if (Policy.OnCheckAvailable(conn.Value) == false) throw new Exception("CheckAvailable 应抛出异常，代表仍然不可用。");
+							break;
+
+						} finally {
+
+							Return(conn);
+						}
+
+					} catch (Exception ex) {
+						Console.WriteLine($"【{Policy.Name}】仍然不可用，下一次恢复检查时间：{DateTime.Now.AddSeconds(interval)}，错误：({ex.Message})");
+					}
+				}
+
+				bool isRestored = false;
+				if (IsAvailable == false) {
+
+					lock (IsAvailableLock) {
+
+						if (IsAvailable == false) {
+
+							IsAvailable = true;
+							UnavailableTime = null;
+							isRestored = true;
+						}
+					}
+				}
+
+				if (isRestored) {
+
+					lock (_allObjectsLock)
+						_allObjects.ForEach(a => a.LastGetTime = a.LastReturnTime = new DateTime(2000, 1, 1));
+
+					Policy.OnAvailable();
+					Console.WriteLine($"【{Policy.Name}】已恢复工作");
+				}
+
+			}).Start();
+		}
 
 		/// <summary>
 		/// 统计
@@ -77,13 +166,23 @@ namespace SafeObjectPool {
 		/// <param name="policy">策略</param>
 		public ObjectPool(IPolicy<T> policy) {
 			Policy = policy;
+
+			AppDomain.CurrentDomain.ProcessExit += (s1, e1) => {
+				running = false;
+			};
+			Console.CancelKeyPress += (s1, e1) => {
+				running = false;
+			};
 		}
 
 		/// <summary>
 		/// 获取可用资源，或创建资源
 		/// </summary>
 		/// <returns></returns>
-		private Object<T> getFree() {
+		private Object<T> getFree(bool checkAvailable) {
+
+			if (checkAvailable && IsAvailable == false)
+				throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。");
 
 			if ((_freeObjects.TryDequeue(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize) {
 
@@ -92,7 +191,7 @@ namespace SafeObjectPool {
 						_allObjects.Add(obj = new Object<T> { Pool = this });
 
 				if (obj != null)
-					obj.Value = Policy.Create();
+					obj.Value = Policy.OnCreate();
 			}
 
 			return obj;
@@ -105,14 +204,16 @@ namespace SafeObjectPool {
 		/// <returns>资源</returns>
 		public Object<T> Get(TimeSpan? timeout = null) {
 
-			var obj = getFree();
-			if (obj == null) {
+			var obj = getFree(true);
 
-				if (timeout == null) timeout = Policy.SyncGetTimeout;
+			if (obj == null) {
 
 				var queueItem = new GetSyncQueueInfo();
 
 				_getSyncQueue.Enqueue(queueItem);
+				_getQueue.Enqueue(false);
+
+				if (timeout == null) timeout = Policy.SyncGetTimeout;
 
 				if (queueItem.Wait.Wait(timeout.Value))
 					obj = queueItem.ReturnValue;
@@ -123,20 +224,25 @@ namespace SafeObjectPool {
 
 				if (obj == null) {
 
-					Policy.GetTimeout();
+					Policy.OnGetTimeout();
 
 					if (Policy.IsThrowGetTimeoutException)
-						throw new Exception($"SafeObjectPool 获取超时（{timeout.Value.TotalSeconds}秒），设置 Policy.IsThrowGetTimeoutException 可以避免该异常。");
+						throw new Exception($"SafeObjectPool.Get 获取超时（{timeout.Value.TotalSeconds}秒），设置 Policy.IsThrowGetTimeoutException 可以避免该异常。");
 
 					return null;
 				}
 			}
 
+			try {
+				Policy.OnGet(obj);
+			} catch {
+				Return(obj);
+				throw;
+			}
+
 			obj.LastGetThreadId = Thread.CurrentThread.ManagedThreadId;
 			obj.LastGetTime = DateTime.Now;
 			Interlocked.Increment(ref obj._getTimes);
-
-			Policy.Get(obj, false);
 
 			return obj;
 		}
@@ -147,21 +253,47 @@ namespace SafeObjectPool {
 		/// <returns>资源</returns>
 		async public Task<Object<T>> GetAsync() {
 
-			var obj = getFree();
+			var obj = getFree(true);
+
 			if (obj == null) {
+
+				if (Policy.AsyncGetCapacity > 0 && _getAsyncQueue.Count >= Policy.AsyncGetCapacity - 1)
+					throw new Exception($"SafeObjectPool.GetAsync 无可用资源且队列过长，Policy.AsyncGetCapacity = {Policy.AsyncGetCapacity}。");
 
 				var tcs = new TaskCompletionSource<Object<T>>();
 
 				_getAsyncQueue.Enqueue(tcs);
+				_getQueue.Enqueue(true);
 
 				obj = await tcs.Task;
+
+				//if (timeout == null) timeout = Policy.SyncGetTimeout;
+
+				//if (tcs.Task.Wait(timeout.Value))
+				//	obj = tcs.Task.Result;
+
+				//if (obj == null) {
+
+				//	tcs.TrySetCanceled();
+				//	Policy.GetTimeout();
+
+				//	if (Policy.IsThrowGetTimeoutException)
+				//		throw new Exception($"SafeObjectPool.GetAsync 获取超时（{timeout.Value.TotalSeconds}秒），设置 Policy.IsThrowGetTimeoutException 可以避免该异常。");
+
+				//	return null;
+				//}
+			}
+
+			try {
+				await Policy.OnGetAsync(obj);
+			} catch {
+				Return(obj);
+				throw;
 			}
 
 			obj.LastGetThreadId = Thread.CurrentThread.ManagedThreadId;
 			obj.LastGetTime = DateTime.Now;
 			Interlocked.Increment(ref obj._getTimes);
-
-			Policy.Get(obj, true);
 
 			return obj;
 		}
@@ -179,24 +311,43 @@ namespace SafeObjectPool {
 
 				(obj.Value as IDisposable)?.Dispose();
 
-				obj.Value = Policy.Create();
+				obj.Value = Policy.OnCreate();
 			}
-
-			obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
-			obj.LastReturnTime = DateTime.Now;
 
 			bool isReturn = false;
 
-			if (Policy.ReturnPriority == ReturnPriority.Async) {
+			while (isReturn == false && _getQueue.TryDequeue(out var isAsync)) {
 
-				isReturn = returnAsync(obj, isReturn);
-				isReturn = returnSync(obj, isReturn);
-			}
+				if (isAsync == false) {
 
-			if (Policy.ReturnPriority == ReturnPriority.Sync) {
+					if (_getSyncQueue.TryDequeue(out var queueItem) && queueItem != null) {
 
-				isReturn = returnSync(obj, isReturn);
-				isReturn = returnAsync(obj, isReturn);
+						lock (queueItem.Lock)
+							if (queueItem.IsTimeout == false)
+								queueItem.ReturnValue = obj;
+
+						if (queueItem.ReturnValue != null) {
+
+							obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
+							obj.LastReturnTime = DateTime.Now;
+
+							queueItem.Wait.Set();
+							isReturn = true;
+						}
+
+						queueItem.Dispose();
+					}
+
+				} else {
+
+					if (_getAsyncQueue.TryDequeue(out var tcs) && tcs != null && tcs.Task.IsCanceled == false) {
+
+						obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
+						obj.LastReturnTime = DateTime.Now;
+
+						isReturn = tcs.TrySetResult(obj);
+					}
+				}
 			}
 
 			//无排队，直接归还
@@ -204,7 +355,7 @@ namespace SafeObjectPool {
 
 				try {
 
-					Policy.Return(obj);
+					Policy.OnReturn(obj);
 
 				} catch {
 
@@ -212,53 +363,12 @@ namespace SafeObjectPool {
 
 				} finally {
 
+					obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
+					obj.LastReturnTime = DateTime.Now;
+
 					_freeObjects.Enqueue(obj);
 				}
 			}
-		}
-
-		/// <summary>
-		/// 激活 Get 的排队，进行 obj 转让
-		/// </summary>
-		/// <param name="isReturn">是否转让成功</param>
-		/// <returns>是否转换成功</returns>
-		private bool returnSync(Object<T> obj, bool isReturn) {
-
-			while (isReturn == false && _getSyncQueue.Any()) {
-
-				if (_getSyncQueue.TryDequeue(out var queueItem) && queueItem != null) {
-
-					lock (queueItem.Lock)
-						if (queueItem.IsTimeout == false)
-							queueItem.ReturnValue = obj;
-
-					if (queueItem.ReturnValue != null) {
-
-						queueItem.Wait.Set();
-						isReturn = true;
-					}
-
-					queueItem.Dispose();
-				}
-			}
-
-			return isReturn;
-		}
-
-		/// <summary>
-		/// 激活 GetAsync 的排队，进行 obj 转让
-		/// </summary>
-		/// <param name="isReturn">是否转让成功</param>
-		/// <returns>是否转换成功</returns>
-		private bool returnAsync(Object<T> obj, bool isReturn) {
-
-			if (isReturn == false && _getAsyncQueue.Any()) {
-
-				if (_getAsyncQueue.TryDequeue(out var tcs) && tcs != null)
-					isReturn = tcs.TrySetResult(obj);
-			}
-
-			return isReturn;
 		}
 
 		class GetSyncQueueInfo : IDisposable {

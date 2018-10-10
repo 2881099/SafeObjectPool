@@ -1,6 +1,8 @@
 # 介绍
 
-数据库操作通常是 new SqlConnection()、 Open()、 使用完后 Close()，其实 ado.net 驱动已经现实了连接池管理，不然每次创建、连接、释放相当浪费性能。假设网站的访问在某一时刻突然爆增100万次，new 100万个SqlConnection对象显然会炸掉服务。
+数据库操作通常是 new SqlConnection()、 Open()、 使用完后 Close()，其实 ado.net 驱动已经现实了连接池管理，不然每次创建、连接、释放相当浪费性能。假设网站的访问在某一时刻突然爆增100万次，new 100万个SqlConnection对象显然会炸掉服务，连接对象，每次创建，connect，disconnect，disponse，显然开销很大。目前看来，最适合做连接对象的池子，对象池里的连接对象，保持长链接，效率最大化。
+
+ado.net自带的链接池不完美，比如占满的时候再请求，会报错。ObjectPool 解决池子空了后，再请求也不会报错，排队等待机制。
 
 对象池使用列表管理一批对象，无论多大并发，始终重复使用创建好的这批对象（从而提升性能），有序的排队申请，使用完后归还资源。
 
@@ -8,9 +10,12 @@
 
 > SafeObjectPool 获取超时（10秒），设置 Policy.IsThrowGetTimeoutException 可以避免该异常。
 
+
+
 # 应用场景
 
 * 数据库连接对象池
+	> [SQLServer连接池](https://github.com/2881099/dng.Mssql/blob/master/Mssql/SqlConnectionPool.cs)、[MySQL连接池](https://github.com/2881099/dng.Mysql/blob/master/Mysql/MySqlConnectionPool.cs)、[PostgreSQL连接池](https://github.com/2881099/dng.Pgsql/blob/master/Npgsql/NpgsqlConnectionPool.cs)
 * redis连接对象池
 
 # 安装
@@ -38,3 +43,56 @@ using (var obj = pool.Get()) {
 
 }
 ```
+
+## SQLServer连接池
+
+```csharp
+var pool = new System.Data.SqlClient.SqlConnectionPool("名称", connectionString, 可用时触发的委托, 不可用时触发的委托);
+var conn = pool.Get();
+
+try {
+
+	// 使用 ...
+	pool.Return(conn); //正常归还
+
+} catch (Exception ex) {
+
+	pool.Return(conn, ex); //发生错误时归还
+}
+```
+
+## MySQL连接池
+
+```csharp
+var pool = new MySql.Data.MySqlClient.MySqlConnectionPool("名称", connectionString, 可用时触发的委托, 不可用时触发的委托);
+var conn = pool.Get();
+
+try {
+
+	// 使用 ...
+	pool.Return(conn); //正常归还
+
+} catch (Exception ex) {
+
+	pool.Return(conn, ex); //发生错误时归还
+}
+```
+
+## PostgreSQL连接池
+
+```csharp
+var pool = new Npgsql.NpgsqlConnectionPool("名称", connectionString, 可用时触发的委托, 不可用时触发的委托);
+var conn = pool.Get();
+
+try {
+
+	// 使用 ...
+	pool.Return(conn); //正常归还
+
+} catch (Exception ex) {
+
+	pool.Return(conn, ex); //发生错误时归还
+}
+```
+
+# 更多连接池正在开发中。。。
