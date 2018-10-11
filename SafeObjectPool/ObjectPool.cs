@@ -189,10 +189,10 @@ namespace SafeObjectPool {
 				lock (_allObjectsLock)
 					if (_allObjects.Count < Policy.PoolSize)
 						_allObjects.Add(obj = new Object<T> { Pool = this });
-
-				if (obj != null)
-					obj.Value = Policy.OnCreate();
 			}
+
+			if (obj != null && obj.Value == null)
+				obj.Value = Policy.OnCreate();
 
 			return obj;
 		}
