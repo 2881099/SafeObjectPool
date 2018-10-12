@@ -6,8 +6,16 @@ namespace SafeObjectPool {
 	
 	public class Object<T> : IDisposable {
 
-		internal ObjectPool<T> Pool;
+		/// <summary>
+		/// 所属对象池
+		/// </summary>
 
+		public ObjectPool<T> Pool { get; internal set; }
+
+		/// <summary>
+		/// 在对象池中的唯一标识
+		/// </summary>
+		public int Id { get; internal set; }
 		/// <summary>
 		/// 资源对象
 		/// </summary>
@@ -50,7 +58,8 @@ namespace SafeObjectPool {
 		/// 重置 Value 值
 		/// </summary>
 		public void ResetValue() {
-			(this.Value as IDisposable)?.Dispose();
+			try { this.Pool.Policy.OnDestroy(this.Value); } catch { }
+			try { (this.Value as IDisposable)?.Dispose(); } catch { }
 			this.Value = this.Pool.Policy.OnCreate();
 		}
 

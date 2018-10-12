@@ -44,6 +44,12 @@ namespace SafeObjectPool {
 		T OnCreate();
 
 		/// <summary>
+		/// 销毁对象
+		/// </summary>
+		/// <param name="obj">资源对象</param>
+		void OnDestroy(T obj);
+
+		/// <summary>
 		/// 从对象池获取对象超时的时候触发，通过该方法统计
 		/// </summary>
 		void OnGetTimeout();
@@ -63,15 +69,15 @@ namespace SafeObjectPool {
 		/// <summary>
 		/// 归还对象给对象池的时候触发
 		/// </summary>
-		/// <param name="obj"></param>
+		/// <param name="obj">资源对象</param>
 		void OnReturn(Object<T> obj);
 
 		/// <summary>
 		/// 检查可用性
 		/// </summary>
-		/// <param name="obj">对象</param>
+		/// <param name="obj">资源对象</param>
 		/// <returns></returns>
-		bool OnCheckAvailable(T obj);
+		bool OnCheckAvailable(Object<T> obj);
 
 		/// <summary>
 		/// 事件：可用时触发

@@ -74,7 +74,16 @@ namespace SafeObjectPool {
 
 			new Thread(() => {
 
-				if (IsAvailable == false) Console.WriteLine($"【{Policy.Name}】恢复检查时间：{DateTime.Now.AddSeconds(interval)}");
+				if (IsAvailable == false) {
+					var bgcolor = Console.BackgroundColor;
+					var forecolor = Console.ForegroundColor;
+					Console.BackgroundColor = ConsoleColor.DarkYellow;
+					Console.ForegroundColor = ConsoleColor.White;
+					Console.Write($"【{Policy.Name}】恢复检查时间：{DateTime.Now.AddSeconds(interval)}");
+					Console.BackgroundColor = bgcolor;
+					Console.ForegroundColor = forecolor;
+					Console.WriteLine();
+				}
 
 				while (IsAvailable == false) {
 
@@ -91,7 +100,7 @@ namespace SafeObjectPool {
 
 						try {
 
-							if (Policy.OnCheckAvailable(conn.Value) == false) throw new Exception("CheckAvailable 应抛出异常，代表仍然不可用。");
+							if (Policy.OnCheckAvailable(conn) == false) throw new Exception("CheckAvailable 应抛出异常，代表仍然不可用。");
 							break;
 
 						} finally {
@@ -100,7 +109,14 @@ namespace SafeObjectPool {
 						}
 
 					} catch (Exception ex) {
-						Console.WriteLine($"【{Policy.Name}】仍然不可用，下一次恢复检查时间：{DateTime.Now.AddSeconds(interval)}，错误：({ex.Message})");
+						var bgcolor = Console.BackgroundColor;
+						var forecolor = Console.ForegroundColor;
+						Console.BackgroundColor = ConsoleColor.DarkYellow;
+						Console.ForegroundColor = ConsoleColor.White;
+						Console.Write($"【{Policy.Name}】仍然不可用，下一次恢复检查时间：{DateTime.Now.AddSeconds(interval)}，错误：({ex.Message})");
+						Console.BackgroundColor = bgcolor;
+						Console.ForegroundColor = forecolor;
+						Console.WriteLine();
 					}
 				}
 
@@ -124,7 +140,15 @@ namespace SafeObjectPool {
 						_allObjects.ForEach(a => a.LastGetTime = a.LastReturnTime = new DateTime(2000, 1, 1));
 
 					Policy.OnAvailable();
-					Console.WriteLine($"【{Policy.Name}】已恢复工作");
+
+					var bgcolor = Console.BackgroundColor;
+					var forecolor = Console.ForegroundColor;
+					Console.BackgroundColor = ConsoleColor.DarkGreen;
+					Console.ForegroundColor = ConsoleColor.White;
+					Console.Write($"【{Policy.Name}】已恢复工作");
+					Console.BackgroundColor = bgcolor;
+					Console.ForegroundColor = forecolor;
+					Console.WriteLine();
 				}
 
 			}).Start();
@@ -188,7 +212,7 @@ namespace SafeObjectPool {
 
 				lock (_allObjectsLock)
 					if (_allObjects.Count < Policy.PoolSize)
-						_allObjects.Add(obj = new Object<T> { Pool = this });
+						_allObjects.Add(obj = new Object<T> { Pool = this, Id = _allObjects.Count + 1 });
 			}
 
 			if (obj != null && obj.Value == null)
@@ -302,17 +326,12 @@ namespace SafeObjectPool {
 		/// 使用完毕后，归还资源
 		/// </summary>
 		/// <param name="obj">对象</param>
-		/// <param name="isRecreate">是否重新创建</param>
-		public void Return(Object<T> obj, bool isRecreate = false) {
+		/// <param name="isReset">是否重新创建</param>
+		public void Return(Object<T> obj, bool isReset = false) {
 
 			if (obj == null) return;
 
-			if (isRecreate) {
-
-				(obj.Value as IDisposable)?.Dispose();
-
-				obj.Value = Policy.OnCreate();
-			}
+			if (isReset) obj.ResetValue();
 
 			bool isReturn = false;
 

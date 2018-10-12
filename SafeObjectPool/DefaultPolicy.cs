@@ -22,6 +22,10 @@ namespace SafeObjectPool {
 			return CreateObject();
 		}
 
+		public void OnDestroy(T obj) {
+			
+		}
+
 		public void OnGet(Object<T> obj) {
 			//Console.WriteLine("Get: " + obj);
 			OnGetObject?.Invoke(obj);
@@ -41,7 +45,7 @@ namespace SafeObjectPool {
 			//Console.WriteLine("Return: " + obj);
 		}
 
-		public bool OnCheckAvailable(T obj) {
+		public bool OnCheckAvailable(Object<T> obj) {
 			return true;
 		}
 
