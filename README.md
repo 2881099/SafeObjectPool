@@ -49,7 +49,7 @@ ab -c 10 -n 1000 -s 6000 测试结果差不多
 ## 应用场景
 
 * 数据库连接对象池
-	> [SQLServer连接池](https://github.com/2881099/dng.Mssql/blob/master/Mssql/SqlConnectionPool.cs)、[MySQL连接池](https://github.com/2881099/dng.Mysql/blob/master/MySql.Data.MySqlClient/MySqlConnectionPool.cs)、[PostgreSQL连接池](https://github.com/2881099/dng.Pgsql/blob/master/Npgsql/NpgsqlConnectionPool.cs)、[Redis连接池](https://github.com/2881099/csredis/blob/master/src/CSRedisCore/RedisConnectionPool.cs)
+	> [SQLServer连接池](https://github.com/2881099/dng.Mssql/blob/master/Mssql/SqlConnectionPool.cs)、[MySQL连接池](https://github.com/2881099/dng.Mysql/blob/master/MySql.Data.MySqlClient/MySqlConnectionPool.cs)、[PostgreSQL连接池](https://github.com/2881099/dng.Pgsql/blob/master/Npgsql/NpgsqlConnectionPool.cs)、[Redis连接池](https://github.com/2881099/csredis/blob/master/src/CSRedisCore/RedisClientPool.cs)
 * redis连接对象池
 
 ## 安装
