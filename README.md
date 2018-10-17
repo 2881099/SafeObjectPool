@@ -49,7 +49,7 @@ ab -c 10 -n 1000 -s 6000 测试结果差不多
 ## 应用场景
 
 * 数据库连接对象池
-	> [SQLServer连接池](https://github.com/2881099/dng.Mssql/blob/master/Mssql/SqlConnectionPool.cs)、[MySQL连接池](https://github.com/2881099/dng.Mysql/blob/master/MySql.Data.MySqlClient/MySqlConnectionPool.cs)、[PostgreSQL连接池](https://github.com/2881099/dng.Pgsql/blob/master/Npgsql/NpgsqlConnectionPool.cs)
+	> [SQLServer连接池](https://github.com/2881099/dng.Mssql/blob/master/Mssql/SqlConnectionPool.cs)、[MySQL连接池](https://github.com/2881099/dng.Mysql/blob/master/MySql.Data.MySqlClient/MySqlConnectionPool.cs)、[PostgreSQL连接池](https://github.com/2881099/dng.Pgsql/blob/master/Npgsql/NpgsqlConnectionPool.cs)、[Redis连接池](https://github.com/2881099/csredis/blob/master/src/CSRedisCore/RedisConnectionPool.cs)
 * redis连接对象池
 
 ## 安装
@@ -106,6 +106,21 @@ try {
 
 ```csharp
 var pool = new Npgsql.NpgsqlConnectionPool("名称", connectionString, 可用时触发的委托, 不可用时触发的委托);
+var conn = pool.Get();
+
+try {
+	// 使用 ...
+	pool.Return(conn); //正常归还
+} catch (Exception ex) {
+	pool.Return(conn, ex); //发生错误时归还
+}
+```
+
+## Redis连接池
+
+```csharp
+var connectionString = "127.0.0.1[:6379],password=,defaultDatabase=13,poolsize=50,ssl=false,writeBuffer=10240,prefix=key前辍";
+var pool = new CSRedis.RedisClientPool("名称", connectionString, client => { });
 var conn = pool.Get();
 
 try {
