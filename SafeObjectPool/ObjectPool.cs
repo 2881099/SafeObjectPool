@@ -13,7 +13,7 @@ namespace SafeObjectPool {
 	/// 对象池管理类
 	/// </summary>
 	/// <typeparam name="T">对象类型</typeparam>
-	public partial class ObjectPool<T> {
+	public partial class ObjectPool<T> : IDisposable {
 
 		public IPolicy<T> Policy { get; protected set; }
 
@@ -28,29 +28,33 @@ namespace SafeObjectPool {
 		/// <summary>
 		/// 是否可用
 		/// </summary>
-		public bool IsAvailable { get; private set; } = true;
+		public bool IsAvailable => this.UnavailableException == null;
+		/// <summary>
+		/// 不可用错误
+		/// </summary>
+		public Exception UnavailableException { get; private set; }
 		/// <summary>
 		/// 不可用时间
 		/// </summary>
 		public DateTime? UnavailableTime { get; private set; }
-		private object IsAvailableLock = new object();
+		private object UnavailableLock = new object();
 		private static bool running = true;
 
 		/// <summary>
 		/// 将连接池设置为不可用，后续 Get/GetAsync 均会报错，同时启动后台定时检查服务恢复可用
 		/// </summary>
 		/// <returns>由【可用】变成【不可用】时返回true，否则返回false</returns>
-		public bool SetUnavailable() {
+		public bool SetUnavailable(Exception exception) {
 
 			bool isseted = false;
 
-			if (IsAvailable == true) {
+			if (exception != null && UnavailableException == null) {
 
-				lock(IsAvailableLock) {
+				lock (UnavailableLock) {
 
-					if (IsAvailable == true) {
+					if (UnavailableException == null) {
 
-						IsAvailable = false;
+						UnavailableException = exception;
 						UnavailableTime = DateTime.Now;
 						isseted = true;
 					}
@@ -74,7 +78,7 @@ namespace SafeObjectPool {
 
 			new Thread(() => {
 
-				if (IsAvailable == false) {
+				if (UnavailableException != null) {
 					var bgcolor = Console.BackgroundColor;
 					var forecolor = Console.ForegroundColor;
 					Console.BackgroundColor = ConsoleColor.DarkYellow;
@@ -85,7 +89,7 @@ namespace SafeObjectPool {
 					Console.WriteLine();
 				}
 
-				while (IsAvailable == false) {
+				while (UnavailableException != null) {
 
 					if (running == false) return;
 
@@ -121,13 +125,13 @@ namespace SafeObjectPool {
 				}
 
 				bool isRestored = false;
-				if (IsAvailable == false) {
+				if (UnavailableException != null) {
 
-					lock (IsAvailableLock) {
+					lock (UnavailableLock) {
 
-						if (IsAvailable == false) {
+						if (UnavailableException != null) {
 
-							IsAvailable = true;
+							UnavailableException = null;
 							UnavailableTime = null;
 							isRestored = true;
 						}
@@ -205,8 +209,11 @@ namespace SafeObjectPool {
 		/// <returns></returns>
 		private Object<T> getFree(bool checkAvailable) {
 
-			if (checkAvailable && IsAvailable == false)
-				throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。");
+			if (running == false)
+				throw new Exception($"【{Policy.Name}】对象池已释放，无法访问。");
+
+			if (checkAvailable && UnavailableException != null)
+				throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。{UnavailableException.Message}");
 
 			if ((_freeObjects.TryDequeue(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize) {
 
@@ -331,6 +338,14 @@ namespace SafeObjectPool {
 
 			if (obj == null) return;
 
+			if (running == false) {
+
+				Policy.OnDestroy(obj.Value);
+				try { (obj.Value as IDisposable)?.Dispose(); } catch { }
+
+				return;
+			}
+
 			if (isReset) obj.ResetValue();
 
 			bool isReturn = false;
@@ -388,6 +403,30 @@ namespace SafeObjectPool {
 					_freeObjects.Enqueue(obj);
 				}
 			}
+		}
+
+		public void Dispose() {
+
+			running = false;
+
+			while (_freeObjects.TryDequeue(out var fo)) ;
+
+			while (_getSyncQueue.TryDequeue(out var sync)) {
+				try { sync.Wait.Set(); } catch { }
+			}
+
+			while(_getAsyncQueue.TryDequeue(out var async)) {
+				async.TrySetCanceled();
+			}
+
+			while (_getQueue.TryDequeue(out var qs)) ;
+
+			for (var a = 0; a < _allObjects.Count; a++) {
+				Policy.OnDestroy(_allObjects[a].Value);
+				try { (_allObjects[a].Value as IDisposable)?.Dispose(); } catch { }
+			}
+
+			_allObjects.Clear();
 		}
 
 		class GetSyncQueueInfo : IDisposable {
