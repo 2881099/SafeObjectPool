@@ -38,7 +38,7 @@ namespace SafeObjectPool {
 		/// </summary>
 		public DateTime? UnavailableTime { get; private set; }
 		private object UnavailableLock = new object();
-		private static bool running = true;
+		private bool running = true;
 
 		/// <summary>
 		/// 将连接池设置为不可用，后续 Get/GetAsync 均会报错，同时启动后台定时检查服务恢复可用
