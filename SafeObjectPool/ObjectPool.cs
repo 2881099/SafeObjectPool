@@ -246,8 +246,10 @@ namespace SafeObjectPool {
 
 				if (timeout == null) timeout = Policy.SyncGetTimeout;
 
-				if (queueItem.Wait.Wait(timeout.Value))
-					obj = queueItem.ReturnValue;
+				try {
+					if (queueItem.Wait.Wait(timeout.Value))
+						obj = queueItem.ReturnValue;
+				} catch { }
 
 				if (obj == null) obj = queueItem.ReturnValue;
 				if (obj == null) lock (queueItem.Lock) queueItem.IsTimeout = (obj = queueItem.ReturnValue) == null;
