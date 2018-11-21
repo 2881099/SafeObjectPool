@@ -210,7 +210,7 @@ namespace SafeObjectPool {
 		private Object<T> getFree(bool checkAvailable) {
 
 			if (running == false)
-				throw new Exception($"【{Policy.Name}】对象池已释放，无法访问。");
+				throw new ObjectDisposedException($"【{Policy.Name}】对象池已释放，无法访问。");
 
 			if (checkAvailable && UnavailableException != null)
 				throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。{UnavailableException.Message}");
@@ -260,7 +260,7 @@ namespace SafeObjectPool {
 					Policy.OnGetTimeout();
 
 					if (Policy.IsThrowGetTimeoutException)
-						throw new Exception($"SafeObjectPool.Get 获取超时（{timeout.Value.TotalSeconds}秒），设置 Policy.IsThrowGetTimeoutException 可以避免该异常。");
+						throw new TimeoutException($"SafeObjectPool.Get 获取超时（{timeout.Value.TotalSeconds}秒），设置 Policy.IsThrowGetTimeoutException 可以避免该异常。");
 
 					return null;
 				}
@@ -291,7 +291,7 @@ namespace SafeObjectPool {
 			if (obj == null) {
 
 				if (Policy.AsyncGetCapacity > 0 && _getAsyncQueue.Count >= Policy.AsyncGetCapacity - 1)
-					throw new Exception($"SafeObjectPool.GetAsync 无可用资源且队列过长，Policy.AsyncGetCapacity = {Policy.AsyncGetCapacity}。");
+					throw new OutOfMemoryException($"SafeObjectPool.GetAsync 无可用资源且队列过长，Policy.AsyncGetCapacity = {Policy.AsyncGetCapacity}。");
 
 				var tcs = new TaskCompletionSource<Object<T>>();
 
