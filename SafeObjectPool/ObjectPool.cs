@@ -252,16 +252,8 @@ namespace SafeObjectPool {
 						_allObjects.Add(obj = new Object<T> { Pool = this, Id = _allObjects.Count + 1 });
 			}
 
-			if (obj != null && obj.Value == null) {
-				try {
-					obj.Value = Policy.OnCreate();
-				} catch {
-					Return(obj);
-					throw;
-				}
-			}
-
-			if (obj != null && Policy.IdleTimeout > TimeSpan.Zero && DateTime.Now.Subtract(obj.LastReturnTime) > Policy.IdleTimeout) {
+			if (obj != null && obj.Value == null ||
+				obj != null && Policy.IdleTimeout > TimeSpan.Zero && DateTime.Now.Subtract(obj.LastReturnTime) > Policy.IdleTimeout) {
 				try {
 					obj.ResetValue();
 				} catch {
