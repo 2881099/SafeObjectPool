@@ -261,6 +261,15 @@ namespace SafeObjectPool {
 				}
 			}
 
+			if (obj != null && Policy.IdleTimeout > TimeSpan.Zero && DateTime.Now.Subtract(obj.LastReturnTime) > Policy.IdleTimeout) {
+				try {
+					obj.ResetValue();
+				} catch {
+					Return(obj);
+					throw;
+				}
+			}
+
 			return obj;
 		}
 
