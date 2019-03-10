@@ -19,7 +19,7 @@ namespace SafeObjectPool {
 
 		private List<Object<T>> _allObjects = new List<Object<T>>();
 		private object _allObjectsLock = new object();
-		private ConcurrentQueue<Object<T>> _freeObjects = new ConcurrentQueue<Object<T>>();
+		private ConcurrentStack<Object<T>> _freeObjects = new ConcurrentStack<Object<T>>();
 
 		private ConcurrentQueue<GetSyncQueueInfo> _getSyncQueue = new ConcurrentQueue<GetSyncQueueInfo>();
 		private ConcurrentQueue<TaskCompletionSource<Object<T>>> _getAsyncQueue = new ConcurrentQueue<TaskCompletionSource<Object<T>>>();
@@ -245,7 +245,7 @@ namespace SafeObjectPool {
 			if (checkAvailable && UnavailableException != null)
 				throw new Exception($"【{Policy.Name}】状态不可用，等待后台检查程序恢复方可使用。{UnavailableException.Message}");
 
-			if ((_freeObjects.TryDequeue(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize) {
+			if ((_freeObjects.TryPop(out var obj) == false || obj == null) && _allObjects.Count < Policy.PoolSize) {
 
 				lock (_allObjectsLock)
 					if (_allObjects.Count < Policy.PoolSize)
@@ -439,7 +439,7 @@ namespace SafeObjectPool {
 					obj.LastReturnThreadId = Thread.CurrentThread.ManagedThreadId;
 					obj.LastReturnTime = DateTime.Now;
 
-					_freeObjects.Enqueue(obj);
+					_freeObjects.Push(obj);
 				}
 			}
 		}
@@ -448,7 +448,7 @@ namespace SafeObjectPool {
 
 			running = false;
 
-			while (_freeObjects.TryDequeue(out var fo)) ;
+			while (_freeObjects.TryPop(out var fo)) ;
 
 			while (_getSyncQueue.TryDequeue(out var sync)) {
 				try { sync.Wait.Set(); } catch { }
