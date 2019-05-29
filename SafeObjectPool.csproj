@@ -1,18 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>SafeObjectPool</AssemblyName>
-    <PackageId>SafeObjectPool</PackageId>
-    <RootNamespace>SafeObjectPool</RootNamespace>
-    <Version>2.0.1</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageProjectUrl>https://github.com/2881099/SafeObjectPool</PackageProjectUrl>
-    <Description>应用场景：连接池，资源池等等</Description>
-    <RepositoryUrl>https://github.com/2881099/SafeObjectPool</RepositoryUrl>
-    <PackageTags>Pool Pooling PoolSize ObjectPool 连接池</PackageTags>
-    <WarningLevel>3</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard2.0\SafeObjectPool.xml</DocumentationFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		
+		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+		<AssemblyName>SafeObjectPool</AssemblyName>
+		<PackageId>SafeObjectPool</PackageId>
+		<RootNamespace>SafeObjectPool</RootNamespace>
+		<Version>2.0.2</Version>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageProjectUrl>https://github.com/2881099/SafeObjectPool</PackageProjectUrl>
+		<Description>应用场景：连接池，资源池等等</Description>
+		<RepositoryUrl>https://github.com/2881099/SafeObjectPool</RepositoryUrl>
+		<PackageTags>Pool Pooling PoolSize ObjectPool 连接池</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageId>$(AssemblyName)</PackageId>
+		<Title>$(AssemblyName)</Title>
+		<IsPackable>true</IsPackable>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<WarningLevel>3</WarningLevel>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DocumentationFile>SafeObjectPool.xml</DocumentationFile>
+	</PropertyGroup>
+	
 </Project>

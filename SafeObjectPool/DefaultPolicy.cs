@@ -35,7 +35,7 @@ namespace SafeObjectPool {
 		public Task OnGetAsync(Object<T> obj) {
 			//Console.WriteLine("GetAsync: " + obj);
 			OnGetObject?.Invoke(obj);
-			return Task.CompletedTask;
+			return Task.FromResult(true);
 		}
 
 		public void OnGetTimeout() {
