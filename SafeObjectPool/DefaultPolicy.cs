@@ -3,38 +3,44 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SafeObjectPool {
+namespace SafeObjectPool
+{
 
-	public class DefaultPolicy<T> : IPolicy<T> {
+    public class DefaultPolicy<T> : IPolicy<T>
+    {
 
-		public string Name { get; set; } = typeof(DefaultPolicy<T>).GetType().FullName;
-		public int PoolSize { get; set; } = 1000;
-		public TimeSpan SyncGetTimeout { get; set; } = TimeSpan.FromSeconds(10);
-		public TimeSpan IdleTimeout { get; set; } = TimeSpan.FromSeconds(50);
-		public int AsyncGetCapacity { get; set; } = 10000;
-		public bool IsThrowGetTimeoutException { get; set; } = true;
-		public int CheckAvailableInterval { get; set; } = 5;
+        public string Name { get; set; } = typeof(DefaultPolicy<T>).GetType().FullName;
+        public int PoolSize { get; set; } = 1000;
+        public TimeSpan SyncGetTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan IdleTimeout { get; set; } = TimeSpan.FromSeconds(50);
+        public int AsyncGetCapacity { get; set; } = 10000;
+        public bool IsThrowGetTimeoutException { get; set; } = true;
+        public int CheckAvailableInterval { get; set; } = 5;
 
 
-		public Func<T> CreateObject;
-		public Action<Object<T>> OnGetObject;
+        public Func<T> CreateObject;
+        public Action<Object<T>> OnGetObject;
 
-		public T OnCreate() {
-			return CreateObject();
-		}
+        public T OnCreate()
+        {
+            return CreateObject();
+        }
 
-		public void OnDestroy(T obj) {
-			
-		}
+        public void OnDestroy(T obj)
+        {
 
-		public void OnGet(Object<T> obj) {
-			//Console.WriteLine("Get: " + obj);
-			OnGetObject?.Invoke(obj);
-		}
+        }
 
-		public Task OnGetAsync(Object<T> obj) {
-			//Console.WriteLine("GetAsync: " + obj);
-			OnGetObject?.Invoke(obj);
+        public void OnGet(Object<T> obj)
+        {
+            //Console.WriteLine("Get: " + obj);
+            OnGetObject?.Invoke(obj);
+        }
+
+        public Task OnGetAsync(Object<T> obj)
+        {
+            //Console.WriteLine("GetAsync: " + obj);
+            OnGetObject?.Invoke(obj);
 #if NET40
             return Task.Factory.StartNew(()=> true );
 #else
@@ -42,24 +48,29 @@ namespace SafeObjectPool {
 #endif
         }
 
-		public void OnGetTimeout() {
-			
-		}
+        public void OnGetTimeout()
+        {
 
-		public void OnReturn(Object<T> obj) {
-			//Console.WriteLine("Return: " + obj);
-		}
+        }
 
-		public bool OnCheckAvailable(Object<T> obj) {
-			return true;
-		}
+        public void OnReturn(Object<T> obj)
+        {
+            //Console.WriteLine("Return: " + obj);
+        }
 
-		public void OnAvailable() {
-			
-		}
+        public bool OnCheckAvailable(Object<T> obj)
+        {
+            return true;
+        }
 
-		public void OnUnavailable() {
-			
-		}
-	}
+        public void OnAvailable()
+        {
+
+        }
+
+        public void OnUnavailable()
+        {
+
+        }
+    }
 }
