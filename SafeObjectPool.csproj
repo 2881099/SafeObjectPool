@@ -1,31 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		
-		<TargetFrameworks>netstandard2.0;net45;net40</TargetFrameworks>
-		<AssemblyName>SafeObjectPool</AssemblyName>
-		<PackageId>SafeObjectPool</PackageId>
-		<RootNamespace>SafeObjectPool</RootNamespace>
-		<Version>2.1.1</Version>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageProjectUrl>https://github.com/2881099/SafeObjectPool</PackageProjectUrl>
-		<Description>应用场景：连接池，资源池等等</Description>
-		<RepositoryUrl>https://github.com/2881099/SafeObjectPool</RepositoryUrl>
-		<PackageTags>Pool Pooling PoolSize ObjectPool 连接池</PackageTags>
-		<RepositoryType>git</RepositoryType>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageId>$(AssemblyName)</PackageId>
-		<Title>$(AssemblyName)</Title>
-		<IsPackable>true</IsPackable>
-		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-		<WarningLevel>3</WarningLevel>
-	</PropertyGroup>
-	
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DocumentationFile>SafeObjectPool.xml</DocumentationFile>
-	</PropertyGroup>
+  <PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
-    <PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
-  </ItemGroup>
-	
+    <TargetFrameworks>netstandard2.0;net45;net40</TargetFrameworks>
+    <AssemblyName>SafeObjectPool</AssemblyName>
+    <PackageId>SafeObjectPool</PackageId>
+    <RootNamespace>SafeObjectPool</RootNamespace>
+    <Version>2.1.2</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/2881099/SafeObjectPool</PackageProjectUrl>
+    <Description>应用场景：连接池，资源池等等</Description>
+    <RepositoryUrl>https://github.com/2881099/SafeObjectPool</RepositoryUrl>
+    <PackageTags>Pool Pooling PoolSize ObjectPool 连接池</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageId>$(AssemblyName)</PackageId>
+    <Title>$(AssemblyName)</Title>
+    <IsPackable>true</IsPackable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <WarningLevel>3</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>SafeObjectPool.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
+    <DefineConstants>net40</DefineConstants>
+  </PropertyGroup>
+
 </Project>

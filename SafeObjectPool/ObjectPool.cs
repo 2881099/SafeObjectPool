@@ -370,6 +370,8 @@ namespace SafeObjectPool
             return obj;
         }
 
+#if net40
+#else
         /// <summary>
         /// 获取资源
         /// </summary>
@@ -425,6 +427,7 @@ namespace SafeObjectPool
 
             return obj;
         }
+#endif
 
         /// <summary>
         /// 使用完毕后，归还资源

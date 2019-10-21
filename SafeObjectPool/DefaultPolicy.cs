@@ -37,16 +37,15 @@ namespace SafeObjectPool
             OnGetObject?.Invoke(obj);
         }
 
+#if net40
+#else
         public Task OnGetAsync(Object<T> obj)
         {
             //Console.WriteLine("GetAsync: " + obj);
             OnGetObject?.Invoke(obj);
-#if NET40
-            return Task.Factory.StartNew(()=> true );
-#else
             return Task.FromResult(true);
-#endif
         }
+#endif
 
         public void OnGetTimeout()
         {
