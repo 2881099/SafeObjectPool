@@ -257,16 +257,21 @@ namespace SafeObjectPool
         /// <param name="policy">策略</param>
         public ObjectPool(IPolicy<T> policy)
         {
+            if (policy == null) throw new ArgumentNullException(nameof(policy));
+
             Policy = policy;
 
-            AppDomain.CurrentDomain.ProcessExit += (s1, e1) =>
+            if (policy.IsDisposeOnProcessExit)
             {
-                running = false;
-            };
-            Console.CancelKeyPress += (s1, e1) =>
-            {
-                running = false;
-            };
+                AppDomain.CurrentDomain.ProcessExit += (s1, e1) =>
+                {
+                    running = false;
+                };
+                Console.CancelKeyPress += (s1, e1) =>
+                {
+                    running = false;
+                };
+            }
         }
 
         /// <summary>

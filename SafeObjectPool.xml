@@ -39,6 +39,11 @@
             后台定时检查可用性间隔秒数
             </summary>
         </member>
+        <member name="P:SafeObjectPool.IPolicy`1.IsDisposeOnProcessExit">
+            <summary>
+            注册 AppDomain.CurrentDomain.ProcessExit、Console.CancelKeyPress 自动释放
+            </summary>
+        </member>
         <member name="M:SafeObjectPool.IPolicy`1.OnCreate">
             <summary>
             对象池的对象被创建时
