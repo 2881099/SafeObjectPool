@@ -16,8 +16,25 @@ namespace SafeObjectPool
     /// <typeparam name="T">对象类型</typeparam>
     public partial class ObjectPool<T> : IDisposable
     {
-
-        public IPolicy<T> Policy { get; protected set; }
+        IPolicy<T> _policy;
+        public IPolicy<T> Policy {
+            get => _policy;
+            protected set
+            {
+                _policy = value;
+                if (_policy?.IsDisposeOnProcessExit == true)
+                {
+                    AppDomain.CurrentDomain.ProcessExit += (s1, e1) =>
+                    {
+                        running = false;
+                    };
+                    Console.CancelKeyPress += (s1, e1) =>
+                    {
+                        running = false;
+                    };
+                }
+            }
+        }
 
         private List<Object<T>> _allObjects = new List<Object<T>>();
         private object _allObjectsLock = new object();
@@ -257,21 +274,7 @@ namespace SafeObjectPool
         /// <param name="policy">策略</param>
         public ObjectPool(IPolicy<T> policy)
         {
-            if (policy == null) throw new ArgumentNullException(nameof(policy));
-
             Policy = policy;
-
-            if (policy.IsDisposeOnProcessExit)
-            {
-                AppDomain.CurrentDomain.ProcessExit += (s1, e1) =>
-                {
-                    running = false;
-                };
-                Console.CancelKeyPress += (s1, e1) =>
-                {
-                    running = false;
-                };
-            }
         }
 
         /// <summary>
