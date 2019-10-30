@@ -39,11 +39,6 @@
             后台定时检查可用性间隔秒数
             </summary>
         </member>
-        <member name="P:SafeObjectPool.IPolicy`1.IsDisposeOnProcessExit">
-            <summary>
-            注册 AppDomain.CurrentDomain.ProcessExit、Console.CancelKeyPress 自动释放
-            </summary>
-        </member>
         <member name="M:SafeObjectPool.IPolicy`1.OnCreate">
             <summary>
             对象池的对象被创建时
@@ -62,12 +57,6 @@
             </summary>
         </member>
         <member name="M:SafeObjectPool.IPolicy`1.OnGet(SafeObjectPool.Object{`0})">
-            <summary>
-            从对象池获取对象成功的时候触发，通过该方法统计或初始化对象
-            </summary>
-            <param name="obj">资源对象</param>
-        </member>
-        <member name="M:SafeObjectPool.IPolicy`1.OnGetAsync(SafeObjectPool.Object{`0})">
             <summary>
             从对象池获取对象成功的时候触发，通过该方法统计或初始化对象
             </summary>
@@ -212,12 +201,6 @@
             获取资源
             </summary>
             <param name="timeout">超时</param>
-            <returns>资源</returns>
-        </member>
-        <member name="M:SafeObjectPool.ObjectPool`1.GetAsync">
-            <summary>
-            获取资源
-            </summary>
             <returns>资源</returns>
         </member>
         <member name="M:SafeObjectPool.ObjectPool`1.Return(SafeObjectPool.Object{`0},System.Boolean)">

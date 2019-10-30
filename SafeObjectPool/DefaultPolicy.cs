@@ -16,7 +16,6 @@ namespace SafeObjectPool
         public int AsyncGetCapacity { get; set; } = 10000;
         public bool IsThrowGetTimeoutException { get; set; } = true;
         public int CheckAvailableInterval { get; set; } = 5;
-        public bool IsDisposeOnProcessExit { get; set; } = true;
 
         public Func<T> CreateObject;
         public Action<Object<T>> OnGetObject;

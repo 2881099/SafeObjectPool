@@ -44,11 +44,6 @@ namespace SafeObjectPool
         int CheckAvailableInterval { get; set; }
 
         /// <summary>
-        /// 注册 AppDomain.CurrentDomain.ProcessExit、Console.CancelKeyPress 自动释放
-        /// </summary>
-        bool IsDisposeOnProcessExit { get; set; }
-
-        /// <summary>
         /// 对象池的对象被创建时
         /// </summary>
         /// <returns>返回被创建的对象</returns>
