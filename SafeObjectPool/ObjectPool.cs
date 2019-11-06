@@ -262,10 +262,14 @@ namespace SafeObjectPool
             {
                 running = false;
             };
-            Console.CancelKeyPress += (s1, e1) =>
+            try
             {
-                running = false;
-            };
+                Console.CancelKeyPress += (s1, e1) =>
+                {
+                    running = false;
+                };
+            }
+            catch { }
         }
 
         /// <summary>

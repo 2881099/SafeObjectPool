@@ -212,3 +212,18 @@
         </member>
     </members>
 </doc>
+l.ObjectPool`1.GetAsync">
+            <summary>
+            获取资源
+            </summary>
+            <returns>资源</returns>
+        </member>
+        <member name="M:SafeObjectPool.ObjectPool`1.Return(SafeObjectPool.Object{`0},System.Boolean)">
+            <summary>
+            使用完毕后，归还资源
+            </summary>
+            <param name="obj">对象</param>
+            <param name="isReset">是否重新创建</param>
+        </member>
+    </members>
+</doc>
