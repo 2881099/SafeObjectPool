@@ -1,17 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace SafeObjectPool
 {
 
     public class Object<T> : IDisposable
     {
+        public static Object<T> InitWith(IObjectPool<T> pool, int id, T value)
+        {
+            return new Object<T>
+            {
+                Pool = pool,
+                Id = id,
+                Value = value,
+                LastGetThreadId = Thread.CurrentThread.ManagedThreadId,
+                LastGetTime = DateTime.Now
+            };
+        }
 
         /// <summary>
         /// 所属对象池
         /// </summary>
-        public ObjectPool<T> Pool { get; internal set; }
+        public IObjectPool<T> Pool { get; internal set; }
 
         /// <summary>
         /// 在对象池中的唯一标识

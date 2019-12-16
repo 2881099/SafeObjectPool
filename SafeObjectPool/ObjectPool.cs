@@ -14,7 +14,7 @@ namespace SafeObjectPool
     /// 对象池管理类
     /// </summary>
     /// <typeparam name="T">对象类型</typeparam>
-    public partial class ObjectPool<T> : IDisposable
+    public partial class ObjectPool<T> : IObjectPool<T>
     {
         public IPolicy<T> Policy { get; protected set; }
 
@@ -26,25 +26,12 @@ namespace SafeObjectPool
         private ConcurrentQueue<TaskCompletionSource<Object<T>>> _getAsyncQueue = new ConcurrentQueue<TaskCompletionSource<Object<T>>>();
         private ConcurrentQueue<bool> _getQueue = new ConcurrentQueue<bool>();
 
-        /// <summary>
-        /// 是否可用
-        /// </summary>
         public bool IsAvailable => this.UnavailableException == null;
-        /// <summary>
-        /// 不可用错误
-        /// </summary>
         public Exception UnavailableException { get; private set; }
-        /// <summary>
-        /// 不可用时间
-        /// </summary>
         public DateTime? UnavailableTime { get; private set; }
         private object UnavailableLock = new object();
         private bool running = true;
 
-        /// <summary>
-        /// 将连接池设置为不可用，后续 Get/GetAsync 均会报错，同时启动后台定时检查服务恢复可用
-        /// </summary>
-        /// <returns>由【可用】变成【不可用】时返回true，否则返回false</returns>
         public bool SetUnavailable(Exception exception)
         {
 
@@ -216,13 +203,7 @@ namespace SafeObjectPool
             return true;
         }
 
-        /// <summary>
-        /// 统计
-        /// </summary>
         public string Statistics => $"Pool: {_freeObjects.Count}/{_allObjects.Count}, Get wait: {_getSyncQueue.Count}, GetAsync wait: {_getAsyncQueue.Count}";
-        /// <summary>
-        /// 统计（完整)
-        /// </summary>
         public string StatisticsFullily
         {
             get
@@ -313,11 +294,6 @@ namespace SafeObjectPool
             return obj;
         }
 
-        /// <summary>
-        /// 获取资源
-        /// </summary>
-        /// <param name="timeout">超时</param>
-        /// <returns>资源</returns>
         public Object<T> Get(TimeSpan? timeout = null)
         {
 
@@ -375,10 +351,6 @@ namespace SafeObjectPool
 
 #if net40
 #else
-        /// <summary>
-        /// 获取资源
-        /// </summary>
-        /// <returns>资源</returns>
         async public Task<Object<T>> GetAsync()
         {
 
@@ -432,11 +404,6 @@ namespace SafeObjectPool
         }
 #endif
 
-        /// <summary>
-        /// 使用完毕后，归还资源
-        /// </summary>
-        /// <param name="obj">对象</param>
-        /// <param name="isReset">是否重新创建</param>
         public void Return(Object<T> obj, bool isReset = false)
         {
 

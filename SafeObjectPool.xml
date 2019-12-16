@@ -4,6 +4,58 @@
         <name>SafeObjectPool</name>
     </assembly>
     <members>
+        <member name="P:SafeObjectPool.IObjectPool`1.IsAvailable">
+            <summary>
+            是否可用
+            </summary>
+        </member>
+        <member name="P:SafeObjectPool.IObjectPool`1.UnavailableException">
+            <summary>
+            不可用错误
+            </summary>
+        </member>
+        <member name="P:SafeObjectPool.IObjectPool`1.UnavailableTime">
+            <summary>
+            不可用时间
+            </summary>
+        </member>
+        <member name="M:SafeObjectPool.IObjectPool`1.SetUnavailable(System.Exception)">
+            <summary>
+            将对象池设置为不可用，后续 Get/GetAsync 均会报错，同时启动后台定时检查服务恢复可用
+            </summary>
+            <param name="exception"></param>
+            <returns>由【可用】变成【不可用】时返回true，否则返回false</returns>
+        </member>
+        <member name="P:SafeObjectPool.IObjectPool`1.Statistics">
+            <summary>
+            统计对象池中的对象
+            </summary>
+        </member>
+        <member name="P:SafeObjectPool.IObjectPool`1.StatisticsFullily">
+            <summary>
+            统计对象池中的对象（完整)
+            </summary>
+        </member>
+        <member name="M:SafeObjectPool.IObjectPool`1.Get(System.Nullable{System.TimeSpan})">
+            <summary>
+            获取资源
+            </summary>
+            <param name="timeout">超时</param>
+            <returns></returns>
+        </member>
+        <member name="M:SafeObjectPool.IObjectPool`1.GetAsync">
+            <summary>
+            获取资源
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SafeObjectPool.IObjectPool`1.Return(SafeObjectPool.Object{`0},System.Boolean)">
+            <summary>
+            使用完毕后，归还资源
+            </summary>
+            <param name="obj">对象</param>
+            <param name="isReset">是否重新创建</param>
+        </member>
         <member name="P:SafeObjectPool.IPolicy`1.Name">
             <summary>
             名称
@@ -57,6 +109,12 @@
             </summary>
         </member>
         <member name="M:SafeObjectPool.IPolicy`1.OnGet(SafeObjectPool.Object{`0})">
+            <summary>
+            从对象池获取对象成功的时候触发，通过该方法统计或初始化对象
+            </summary>
+            <param name="obj">资源对象</param>
+        </member>
+        <member name="M:SafeObjectPool.IPolicy`1.OnGetAsync(SafeObjectPool.Object{`0})">
             <summary>
             从对象池获取对象成功的时候触发，通过该方法统计或初始化对象
             </summary>
@@ -139,42 +197,11 @@
             </summary>
             <typeparam name="T">对象类型</typeparam>
         </member>
-        <member name="P:SafeObjectPool.ObjectPool`1.IsAvailable">
-            <summary>
-            是否可用
-            </summary>
-        </member>
-        <member name="P:SafeObjectPool.ObjectPool`1.UnavailableException">
-            <summary>
-            不可用错误
-            </summary>
-        </member>
-        <member name="P:SafeObjectPool.ObjectPool`1.UnavailableTime">
-            <summary>
-            不可用时间
-            </summary>
-        </member>
-        <member name="M:SafeObjectPool.ObjectPool`1.SetUnavailable(System.Exception)">
-            <summary>
-            将连接池设置为不可用，后续 Get/GetAsync 均会报错，同时启动后台定时检查服务恢复可用
-            </summary>
-            <returns>由【可用】变成【不可用】时返回true，否则返回false</returns>
-        </member>
         <member name="M:SafeObjectPool.ObjectPool`1.CheckAvailable(System.Int32)">
             <summary>
             后台定时检查可用性
             </summary>
             <param name="interval"></param>
-        </member>
-        <member name="P:SafeObjectPool.ObjectPool`1.Statistics">
-            <summary>
-            统计
-            </summary>
-        </member>
-        <member name="P:SafeObjectPool.ObjectPool`1.StatisticsFullily">
-            <summary>
-            统计（完整)
-            </summary>
         </member>
         <member name="M:SafeObjectPool.ObjectPool`1.#ctor(System.Int32,System.Func{`0},System.Action{SafeObjectPool.Object{`0}})">
             <summary>
@@ -195,35 +222,6 @@
             获取可用资源，或创建资源
             </summary>
             <returns></returns>
-        </member>
-        <member name="M:SafeObjectPool.ObjectPool`1.Get(System.Nullable{System.TimeSpan})">
-            <summary>
-            获取资源
-            </summary>
-            <param name="timeout">超时</param>
-            <returns>资源</returns>
-        </member>
-        <member name="M:SafeObjectPool.ObjectPool`1.Return(SafeObjectPool.Object{`0},System.Boolean)">
-            <summary>
-            使用完毕后，归还资源
-            </summary>
-            <param name="obj">对象</param>
-            <param name="isReset">是否重新创建</param>
-        </member>
-    </members>
-</doc>
-l.ObjectPool`1.GetAsync">
-            <summary>
-            获取资源
-            </summary>
-            <returns>资源</returns>
-        </member>
-        <member name="M:SafeObjectPool.ObjectPool`1.Return(SafeObjectPool.Object{`0},System.Boolean)">
-            <summary>
-            使用完毕后，归还资源
-            </summary>
-            <param name="obj">对象</param>
-            <param name="isReset">是否重新创建</param>
         </member>
     </members>
 </doc>
