@@ -247,6 +247,7 @@ namespace SafeObjectPool
             {
                 Console.CancelKeyPress += (s1, e1) =>
                 {
+                    if (e1.Cancel) return;
                     running = false;
                 };
             }
