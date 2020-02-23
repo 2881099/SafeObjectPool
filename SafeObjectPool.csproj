@@ -5,7 +5,7 @@
     <AssemblyName>SafeObjectPool</AssemblyName>
     <PackageId>SafeObjectPool</PackageId>
     <RootNamespace>SafeObjectPool</RootNamespace>
-    <Version>2.3.0</Version>
+    <Version>2.3.1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/SafeObjectPool</PackageProjectUrl>
     <Description>应用场景：连接池，资源池等等</Description>
@@ -19,7 +19,7 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <WarningLevel>3</WarningLevel>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>YeXiangQin.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
