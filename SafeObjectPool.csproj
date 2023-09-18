@@ -5,7 +5,7 @@
     <AssemblyName>SafeObjectPool</AssemblyName>
     <PackageId>SafeObjectPool</PackageId>
     <RootNamespace>SafeObjectPool</RootNamespace>
-    <Version>2.3.1</Version>
+    <Version>3.0.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/SafeObjectPool</PackageProjectUrl>
     <Description>应用场景：连接池，资源池等等</Description>

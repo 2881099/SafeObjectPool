@@ -19,11 +19,12 @@
             不可用时间
             </summary>
         </member>
-        <member name="M:SafeObjectPool.IObjectPool`1.SetUnavailable(System.Exception)">
+        <member name="M:SafeObjectPool.IObjectPool`1.SetUnavailable(System.Exception,System.DateTime)">
             <summary>
             将对象池设置为不可用，后续 Get/GetAsync 均会报错，同时启动后台定时检查服务恢复可用
             </summary>
             <param name="exception"></param>
+            <param name="lastGetTime"></param>
             <returns>由【可用】变成【不可用】时返回true，否则返回false</returns>
         </member>
         <member name="P:SafeObjectPool.IObjectPool`1.Statistics">
@@ -84,6 +85,11 @@
         <member name="P:SafeObjectPool.IPolicy`1.IsThrowGetTimeoutException">
             <summary>
             获取超时后，是否抛出异常
+            </summary>
+        </member>
+        <member name="P:SafeObjectPool.IPolicy`1.IsAutoDisposeWithSystem">
+            <summary>
+            监听 AppDomain.CurrentDomain.ProcessExit/Console.CancelKeyPress 事件自动释放
             </summary>
         </member>
         <member name="P:SafeObjectPool.IPolicy`1.CheckAvailableInterval">
@@ -217,7 +223,7 @@
             </summary>
             <param name="policy">策略</param>
         </member>
-        <member name="M:SafeObjectPool.ObjectPool`1.getFree(System.Boolean)">
+        <member name="M:SafeObjectPool.ObjectPool`1.GetFree(System.Boolean)">
             <summary>
             获取可用资源，或创建资源
             </summary>
